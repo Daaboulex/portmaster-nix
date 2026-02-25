@@ -52,7 +52,7 @@ let
         head -c 2 "$bin" | grep -q '#!' && continue
         mv "$bin" "$bin.real"
         cat > "$bin" << WRAPPER
-#!/bin/bash
+#!/bin/sh
 WAYLAND_ARGS=""
 if [ "\$XDG_SESSION_TYPE" = "wayland" ]; then
   WAYLAND_ARGS="${waylandFlags}"
