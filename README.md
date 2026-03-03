@@ -1,18 +1,33 @@
-# Portmaster (Nix Flake)
+# portmaster-nix
 
-This flake packages the [Portmaster](https://safing.io/portmaster/) privacy application for NixOS.
+NixOS packaging for [Portmaster](https://safing.io/portmaster/) — the free and open-source application firewall by [Safing](https://safing.io).
+
+This flake builds Portmaster **v2.1.7 from source** (Go core + Rust/Tauri desktop + Angular UI) and provides a NixOS module with full systemd integration and security hardening.
+
+> **Note**: This is a community packaging effort. Portmaster is developed by Safing GmbH.
+> An upstream nixpkgs PR ([#442904](https://github.com/NixOS/nixpkgs/pull/442904)) is pending — this flake will be deprecated once Portmaster lands in nixpkgs.
+
+## Components
+
+| Component | Technology | Description |
+|---|---|---|
+| `portmaster-core` | Go | Firewall engine — DNS resolver, network filter, threat intelligence |
+| `portmaster` (desktop) | Rust / Tauri | Native desktop app with system tray integration |
+| `portmaster-ui` | Angular | Web UI served by the core at `127.0.0.1:817` |
 
 ## Usage
 
-### In a Flake
-
-Add this to your `flake.nix`:
+### 1. Add flake input
 
 ```nix
-inputs.portmaster.url = "path:./pkgs/portmaster"; # Or git URL
+# flake.nix
+inputs.portmaster = {
+  url = "github:daaboulex/portmaster-nix";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
 ```
 
-Then in your overlay:
+### 2. Stack the overlay
 
 ```nix
 nixpkgs.overlays = [
@@ -20,6 +35,60 @@ nixpkgs.overlays = [
 ];
 ```
 
+### 3. Import the NixOS module
+
+```nix
+imports = [
+  inputs.portmaster.nixosModules.default
+];
+```
+
+### 4. Enable Portmaster
+
+```nix
+services.portmaster = {
+  enable = true;
+  # settings.devmode = true;  # Web UI at 127.0.0.1:817 (default: true)
+  # extraArgs = [ "--verbose" ];
+};
+```
+
+## Module Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `services.portmaster.enable` | bool | `false` | Enable Portmaster firewall service |
+| `services.portmaster.package` | package | `pkgs.portmaster` | Portmaster package to use |
+| `services.portmaster.settings` | attrs | `{}` | Freeform settings passed to portmaster-core |
+| `services.portmaster.settings.devmode` | bool | `true` | Enable web UI at `127.0.0.1:817` |
+| `services.portmaster.extraArgs` | list of str | `[]` | Extra CLI arguments for portmaster-core |
+
+## What gets installed
+
+- **System service**: `portmaster.service` — runs `portmaster-core` as root with proper capabilities and systemd hardening
+- **Desktop app**: `portmaster` binary with `.desktop` file — launch from your application menu
+- **Web UI**: Available at `http://127.0.0.1:817` when `devmode` is enabled
+- **Data directory**: `/var/lib/portmaster/` — managed via `systemd-tmpfiles`
+- **Kernel module**: `netfilter_queue` — loaded automatically for packet filtering
+
+## Migration from v1
+
+If you previously used the v1 packaging (binary fetch + self-update approach):
+
+1. Stop the old service: `sudo systemctl stop portmaster-core`
+2. Back up your config: `sudo cp -r /opt/safing/portmaster/config /tmp/portmaster-config-backup`
+3. Rebuild with the new flake (this creates `/var/lib/portmaster/`)
+4. Optionally restore config: `sudo cp -r /tmp/portmaster-config-backup/* /var/lib/portmaster/config/`
+5. Clean up old data: `sudo rm -rf /opt/safing/portmaster`
+
+> **Note**: v2 databases are not backward-compatible with v1. Threat intelligence and DNS cache will be re-downloaded automatically.
+
+## Credits
+
+- [Safing GmbH](https://safing.io) — Portmaster developers
+- [NixOS/nixpkgs#442904](https://github.com/NixOS/nixpkgs/pull/442904) by WitteShadovv — from-source build approach this flake is based on
+
 ## License
 
-AGPL-3.0 (See LICENSE)
+Portmaster is licensed under [GPL-3.0-only](https://www.gnu.org/licenses/gpl-3.0.html) by Safing GmbH.
+The Nix packaging expressions in this repository are also licensed under GPL-3.0-only — see [LICENSE](LICENSE).

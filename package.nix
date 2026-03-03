@@ -1,32 +1,262 @@
-{ lib
-, stdenv
-, fetchurl
+{
+  lib,
+  buildGoModule,
+  buildNpmPackage,
+  fetchFromGitHub,
+  pkg-config,
+  makeBinaryWrapper,
+  nodejs,
+  glib,
+  gtk3,
+  cairo,
+  pango,
+  gdk-pixbuf,
+  atk,
+  webkitgtk_4_1,
+  libsoup_3,
+  openssl,
+  curl,
+  systemdLibs,
+  iptables,
+  iproute2,
+  libx11,
+  libxcomposite,
+  libxcursor,
+  libxdamage,
+  libxext,
+  libxfixes,
+  libxi,
+  libxrender,
+  libxtst,
+  libxrandr,
+  libxscrnsaver,
+  libxcb,
+  alsa-lib,
+  nss,
+  nspr,
+  at-spi2-atk,
+  cups,
+  dbus,
+  expat,
+  fontconfig,
+  freetype,
+  zlib,
+  libayatana-appindicator,
+  zip,
+  rustPlatform,
+  wrapGAppsHook4,
+  librsvg,
+  makeDesktopItem,
+  copyDesktopItems,
+  autoPatchelfHook,
 }:
 
-stdenv.mkDerivation rec {
-  pname = "portmaster-start";
-  version = "1.6.20";
+let
+  version = "2.1.7";
 
-  src = fetchurl {
-    url = "https://updates.safing.io/latest/linux_amd64/start/portmaster-start";
-    hash = "sha256-xneMV5+tao0l+QTqmGPRj7aQWFr8T5LEWhortDYmL1g=";
+  src = fetchFromGitHub {
+    owner = "safing";
+    repo = "portmaster";
+    tag = "v${version}";
+    hash = "sha256-DUDfeSdIH3e5yx1KKW6h6+HKKQ3WNllsdairjAkTdJs=";
   };
 
-  dontUnpack = true;
-  dontBuild = true;
-  dontFixup = true;
+  # Angular web UI — served by the Tauri desktop app and portmaster-core's web server
+  portmasterUI = buildNpmPackage {
+    pname = "portmaster-ui";
+    inherit version src;
+
+    sourceRoot = "${src.name}/desktop/angular";
+    npmDepsHash = "sha256-yoEGoeXcJIGjjD+r+dQoAdeY7mX3VWOt3LAAO+B0bhA=";
+
+    buildPhase = ''
+      runHook preBuild
+      npm run build
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r dist/* $out/
+      runHook postInstall
+    '';
+
+    dontFixup = true;
+  };
+
+  # Tauri desktop app — native WebKitGTK window embedding the Angular UI
+  portmasterDesktop = rustPlatform.buildRustPackage {
+    pname = "portmaster-desktop";
+    inherit version src;
+
+    sourceRoot = "${src.name}/desktop/tauri/src-tauri";
+    cargoHash = "sha256-q3kgXM06yEuEf+VyywpCHmUGt43RRdSFzTaVlU/jfjc=";
+
+    nativeBuildInputs = [
+      pkg-config
+      wrapGAppsHook4
+    ];
+
+    buildInputs = [
+      glib
+      gtk3
+      cairo
+      pango
+      gdk-pixbuf
+      atk
+      webkitgtk_4_1
+      libsoup_3
+      openssl
+      librsvg
+    ];
+
+    preBuild = ''
+      mkdir -p angular/dist/tauri-builtin
+      ln -s ${portmasterUI}/* angular/dist/tauri-builtin/
+      substituteInPlace tauri.conf.json5 \
+        --replace-fail '"../../angular/dist/tauri-builtin"' '"../angular/dist/tauri-builtin"'
+    '';
+
+    env = {
+      TAURI_KEY_PASSWORD = "";
+      TAURI_PRIVATE_KEY = "";
+    };
+
+    doCheck = false;
+  };
+
+in
+buildGoModule {
+  pname = "portmaster";
+  inherit version src;
+
+  vendorHash = "sha256-uPo1tRUfl4kY1sMlLoc0y6ctygRN5MJPrR5TTgERk6U=";
+
+  nativeBuildInputs = [
+    pkg-config
+    makeBinaryWrapper
+    nodejs
+    zip
+    copyDesktopItems
+    autoPatchelfHook
+  ];
+
+  buildInputs = [
+    glib
+    gtk3
+    cairo
+    pango
+    gdk-pixbuf
+    atk
+    webkitgtk_4_1
+    libsoup_3
+    openssl
+    curl
+    systemdLibs
+    libx11
+    libxcomposite
+    libxcursor
+    libxdamage
+    libxext
+    libxfixes
+    libxi
+    libxrender
+    libxtst
+    libxrandr
+    libxscrnsaver
+    libxcb
+    alsa-lib
+    nss
+    nspr
+    at-spi2-atk
+    cups
+    dbus
+    expat
+    fontconfig
+    freetype
+    zlib
+    libayatana-appindicator
+  ];
+
+  ldflags = [
+    "-s"
+    "-w"
+    "-X github.com/safing/portmaster/base/info.version=${version}"
+    "-X github.com/safing/portmaster/base/info.commit=nixpkgs"
+  ];
+
+  subPackages = [ "cmds/portmaster-core" ];
+
+  doCheck = false;
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "portmaster";
+      exec = "portmaster --data /var/lib/portmaster --log-dir /var/lib/portmaster/logs";
+      icon = "portmaster";
+      desktopName = "Portmaster";
+      comment = "Free and open-source application firewall";
+      categories = [ "Network" "Security" ];
+      startupNotify = false;
+      terminal = false;
+    })
+  ];
 
   installPhase = ''
     runHook preInstall
-    install -Dm755 $src $out/bin/portmaster-start
+
+    mkdir -p $out/bin $out/lib/portmaster \
+      $out/share/icons/hicolor/96x96/apps
+
+    # Core firewall engine (Go)
+    install -m755 $GOPATH/bin/portmaster-core $out/lib/portmaster/
+
+    # Desktop app (Rust/Tauri)
+    install -m755 ${portmasterDesktop}/bin/* $out/lib/portmaster/portmaster
+
+    # Web UI assets
+    mkdir -p $out/lib/portmaster/ui/modules/portmaster
+    cp -r ${portmasterUI}/* $out/lib/portmaster/ui/modules/portmaster/
+
+    # Zipped UI for portmaster-core's built-in web server
+    pushd ${portmasterUI}
+    zip -r $out/lib/portmaster/portmaster.zip .
+    popd
+
+    # Zipped assets
+    pushd assets
+    zip -r $out/lib/portmaster/assets.zip .
+    popd
+
+    # Icon
+    install -Dm644 assets/data/favicons/favicon-96x96.png \
+      $out/share/icons/hicolor/96x96/apps/portmaster.png
+
+    # Symlinks for PATH
+    ln -s $out/lib/portmaster/portmaster-core $out/bin/portmaster-core
+    ln -s $out/lib/portmaster/portmaster $out/bin/portmaster
+
     runHook postInstall
   '';
 
-  meta = with lib; {
-    description = "Portmaster Privacy Application — bootstrap binary";
-    homepage = "https://safing.io/portmaster";
-    license = licenses.agpl3Only;
+  postFixup = ''
+    wrapProgram "$out/lib/portmaster/portmaster-core" \
+      --prefix PATH : ${lib.makeBinPath [ iptables iproute2 ]}
+
+    wrapProgram "$out/lib/portmaster/portmaster" \
+      --prefix PATH : ${lib.makeBinPath [ iptables iproute2 ]} \
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libayatana-appindicator ]} \
+      --set-default GDK_BACKEND "wayland,x11" \
+      --set WEBKIT_DISABLE_COMPOSITING_MODE "1" \
+      --set WEBKIT_DISABLE_DMABUF_RENDERER "1"
+  '';
+
+  meta = {
+    description = "Free and open-source application firewall";
+    homepage = "https://safing.io/portmaster/";
+    license = lib.licenses.gpl3Only;
     platforms = [ "x86_64-linux" ];
-    mainProgram = "portmaster-start";
+    mainProgram = "portmaster";
   };
 }
