@@ -7,6 +7,8 @@
   makeBinaryWrapper,
   nodejs,
   glib,
+  glib-networking,
+  gsettings-desktop-schemas,
   gtk3,
   cairo,
   pango,
@@ -100,6 +102,8 @@ let
 
     buildInputs = [
       glib
+      glib-networking
+      gsettings-desktop-schemas
       gtk3
       cairo
       pango
@@ -110,6 +114,9 @@ let
       openssl
       librsvg
     ];
+
+    # Prevent wrapGAppsHook4 from wrapping — the outer buildGoModule handles all wrapping
+    dontWrapGApps = true;
 
     preBuild = ''
       mkdir -p angular/dist/tauri-builtin
@@ -193,7 +200,7 @@ buildGoModule {
   desktopItems = [
     (makeDesktopItem {
       name = "portmaster";
-      exec = "portmaster --data /var/lib/portmaster --log-dir /var/lib/portmaster/logs";
+      exec = "portmaster --data /var/lib/portmaster";
       icon = "portmaster";
       desktopName = "Portmaster";
       comment = "Free and open-source application firewall";
@@ -247,6 +254,8 @@ buildGoModule {
     wrapProgram "$out/lib/portmaster/portmaster" \
       --prefix PATH : ${lib.makeBinPath [ iptables iproute2 ]} \
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libayatana-appindicator ]} \
+      --prefix GIO_EXTRA_MODULES : "${glib-networking}/lib/gio/modules" \
+      --prefix XDG_DATA_DIRS : "${gsettings-desktop-schemas}/share/gsettings-schemas/${gsettings-desktop-schemas.name}" \
       --set-default GDK_BACKEND "wayland,x11" \
       --set WEBKIT_DISABLE_COMPOSITING_MODE "1" \
       --set WEBKIT_DISABLE_DMABUF_RENDERER "1"

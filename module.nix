@@ -141,15 +141,11 @@ in
       wantedBy = [ "multi-user.target" ];
       requires = [ "systemd-tmpfiles-setup.service" ];
 
-      postStop = ''
-        /var/lib/portmaster/runtime/portmaster-core recover-iptables
-      '';
-
       serviceConfig =
         let
           baseArgs = [
             "/var/lib/portmaster/runtime/portmaster-core"
-            "--data-dir=/var/lib/portmaster/runtime"
+            "--data-dir=/var/lib/portmaster"
             "--log-dir=/var/lib/portmaster/logs"
           ];
           devmodeArgs = lib.optional cfg.settings.devmode "--devmode";
@@ -158,9 +154,9 @@ in
         {
           Type = "simple";
           ExecStart = lib.concatStringsSep " " allArgs;
-          Restart = "on-failure";
+          ExecStopPost = "-/var/lib/portmaster/runtime/portmaster-core recover-iptables";
+          Restart = "always";
           RestartSec = "10";
-          RestartPreventExitStatus = "24";
           User = "root";
           Group = "root";
           LockPersonality = true;
