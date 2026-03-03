@@ -231,8 +231,9 @@ buildGoModule {
     zip -r $out/lib/portmaster/portmaster.zip .
     popd
 
-    # Zipped assets
-    pushd assets
+    # Zipped assets — zip from assets/data/ to match upstream structure
+    # (upstream zip has img/flags/DE.png, NOT data/img/flags/DE.png)
+    pushd assets/data
     zip -r $out/lib/portmaster/assets.zip .
     popd
 
