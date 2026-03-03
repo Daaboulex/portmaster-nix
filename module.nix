@@ -107,14 +107,24 @@ in
       "/var/lib/portmaster/runtime/assets.zip"."L+" = {
         argument = "${cfg.package}/lib/portmaster/assets.zip";
       };
-      # Portmaster hardcodes /usr/lib/portmaster/ for portmaster.zip lookup
+      # Binary updater scans BinDir (defaults to /usr/lib/portmaster/) for artifacts.
+      # Symlink all artifacts so portmaster-core can resolve UI, assets, and binaries.
       "/usr/lib/portmaster".d = {
         mode = "0755";
         user = "root";
         group = "root";
       };
+      "/usr/lib/portmaster/portmaster-core"."L+" = {
+        argument = "${cfg.package}/lib/portmaster/portmaster-core";
+      };
+      "/usr/lib/portmaster/portmaster"."L+" = {
+        argument = "${cfg.package}/lib/portmaster/portmaster";
+      };
       "/usr/lib/portmaster/portmaster.zip"."L+" = {
         argument = "${cfg.package}/lib/portmaster/portmaster.zip";
+      };
+      "/usr/lib/portmaster/assets.zip"."L+" = {
+        argument = "${cfg.package}/lib/portmaster/assets.zip";
       };
     };
 
