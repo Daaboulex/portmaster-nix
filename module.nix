@@ -161,7 +161,7 @@ in
         "firewalld.service"
       ];
       wants = [ "nss-lookup.target" ];
-      wantedBy = lib.mkIf cfg.autostart [ "multi-user.target" ];
+      wantedBy = if cfg.autostart then [ "multi-user.target" ] else [ ];
       requires = [ "systemd-tmpfiles-setup.service" ];
 
       serviceConfig =

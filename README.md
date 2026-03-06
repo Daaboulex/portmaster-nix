@@ -5,7 +5,7 @@ NixOS packaging for [Portmaster](https://safing.io/portmaster/) — the free and
 This flake builds Portmaster **v2.1.7 from source** (Go core + Rust/Tauri desktop + Angular UI) and provides a NixOS module with full systemd integration and security hardening.
 
 > **Note**: This is a community packaging effort. Portmaster is developed by Safing GmbH.
-> An upstream nixpkgs PR ([#442904](https://github.com/NixOS/nixpkgs/pull/442904)) is pending — this flake will be deprecated once Portmaster lands in nixpkgs.
+> This flake will be deprecated once Portmaster lands in nixpkgs. A previous v1 packaging PR ([#264454](https://github.com/NixOS/nixpkgs/pull/264454)) exists but is outdated — this flake packages v2 from source.
 
 ## Components
 
@@ -104,7 +104,7 @@ If you previously used the v1 packaging (binary fetch + self-update approach):
 ## Credits
 
 - [Safing GmbH](https://safing.io) — Portmaster developers
-- [NixOS/nixpkgs#442904](https://github.com/NixOS/nixpkgs/pull/442904) by WitteShadovv — from-source build approach this flake is based on
+- [NixOS/nixpkgs#264454](https://github.com/NixOS/nixpkgs/pull/264454) by WitteShadovv — earlier v1 packaging effort that informed this from-source build approach
 
 ## License
 
