@@ -48,6 +48,8 @@ imports = [
 ```nix
 services.portmaster = {
   enable = true;
+  notifier.enable = true;  # System tray icon (autostart on login)
+  # autostart = true;      # Start service on boot (default: true)
   # settings.devmode = true;  # Web UI at 127.0.0.1:817 (default: true)
   # extraArgs = [ "--verbose" ];
 };
@@ -59,6 +61,9 @@ services.portmaster = {
 |---|---|---|---|
 | `services.portmaster.enable` | bool | `false` | Enable Portmaster firewall service |
 | `services.portmaster.package` | package | `pkgs.portmaster` | Portmaster package to use |
+| `services.portmaster.autostart` | bool | `true` | Start service on boot. When `false`, the service is installed but must be started manually with `sudo systemctl start portmaster` |
+| `services.portmaster.notifier.enable` | bool | `false` | XDG autostart for the system tray icon. Only launches if the service is active |
+| `services.portmaster.notifier.delay` | int | `3` | Seconds to wait before launching the tray icon (lets the desktop system tray initialize) |
 | `services.portmaster.settings` | attrs | `{}` | Freeform settings passed to portmaster-core |
 | `services.portmaster.settings.devmode` | bool | `true` | Enable web UI at `127.0.0.1:817` |
 | `services.portmaster.extraArgs` | list of str | `[]` | Extra CLI arguments for portmaster-core |
@@ -67,9 +72,22 @@ services.portmaster = {
 
 - **System service**: `portmaster.service` — runs `portmaster-core` as root with proper capabilities and systemd hardening
 - **Desktop app**: `portmaster` binary with `.desktop` file — launch from your application menu
+- **System tray**: Optional XDG autostart entry (via `notifier.enable`) — checks that the service is running before launching
 - **Web UI**: Available at `http://127.0.0.1:817` when `devmode` is enabled
 - **Data directory**: `/var/lib/portmaster/` — managed via `systemd-tmpfiles`
 - **Kernel module**: `netfilter_queue` — loaded automatically for packet filtering
+
+## Manual service control
+
+When `autostart = false`, Portmaster doesn't start on boot but is still fully installed:
+
+```bash
+sudo systemctl start portmaster   # Start the firewall
+sudo systemctl stop portmaster    # Stop the firewall
+sudo systemctl status portmaster  # Check status
+```
+
+The notifier tray icon (if enabled) will silently skip launching when the service isn't running — no "Connection refused" popup.
 
 ## Migration from v1
 

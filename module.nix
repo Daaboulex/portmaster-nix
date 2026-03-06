@@ -41,6 +41,29 @@ in
         Extra command-line arguments to pass to portmaster-core.
       '';
     };
+
+    autostart = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Whether portmaster.service starts automatically on boot.
+        When false, the service is installed but must be started manually
+        with `sudo systemctl start portmaster`.
+      '';
+    };
+
+    notifier = {
+      enable = lib.mkEnableOption "Portmaster system tray notifier (XDG autostart)";
+      delay = lib.mkOption {
+        type = lib.types.int;
+        default = 3;
+        description = ''
+          Seconds to delay notifier startup after login.
+          Allows the desktop environment's system tray to initialize before
+          the Portmaster tray icon appears.
+        '';
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -107,24 +130,14 @@ in
       "/var/lib/portmaster/runtime/assets.zip"."L+" = {
         argument = "${cfg.package}/lib/portmaster/assets.zip";
       };
-      # Binary updater scans BinDir (defaults to /usr/lib/portmaster/) for artifacts.
-      # Symlink all artifacts so portmaster-core can resolve UI, assets, and binaries.
+      # Portmaster hardcodes /usr/lib/portmaster/ for portmaster.zip lookup
       "/usr/lib/portmaster".d = {
         mode = "0755";
         user = "root";
         group = "root";
       };
-      "/usr/lib/portmaster/portmaster-core"."L+" = {
-        argument = "${cfg.package}/lib/portmaster/portmaster-core";
-      };
-      "/usr/lib/portmaster/portmaster"."L+" = {
-        argument = "${cfg.package}/lib/portmaster/portmaster";
-      };
       "/usr/lib/portmaster/portmaster.zip"."L+" = {
         argument = "${cfg.package}/lib/portmaster/portmaster.zip";
-      };
-      "/usr/lib/portmaster/assets.zip"."L+" = {
-        argument = "${cfg.package}/lib/portmaster/assets.zip";
       };
     };
 
@@ -148,7 +161,7 @@ in
         "firewalld.service"
       ];
       wants = [ "nss-lookup.target" ];
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = lib.mkIf cfg.autostart [ "multi-user.target" ];
       requires = [ "systemd-tmpfiles-setup.service" ];
 
       serviceConfig =
@@ -229,6 +242,22 @@ in
             "PORTMASTER_RUNTIME_DIR=/var/lib/portmaster/runtime"
           ];
         };
+    };
+
+    # XDG autostart for the Portmaster desktop app (system tray icon).
+    # Only launches if portmaster.service is active — prevents "Connection refused"
+    # popup when the service is stopped or not yet started.
+    environment.etc."xdg/autostart/portmaster-notifier.desktop" = lib.mkIf cfg.notifier.enable {
+      text = ''
+        [Desktop Entry]
+        Name=Portmaster Notifier
+        Comment=Portmaster system tray notifier
+        Exec=/bin/sh -c 'sleep ${toString cfg.notifier.delay}; systemctl is-active --quiet portmaster.service && exec ${cfg.package}/bin/portmaster --data /var/lib/portmaster'
+        Type=Application
+        X-KDE-autostart-phase=2
+        X-KDE-StartupNotify=false
+        NoDisplay=true
+      '';
     };
   };
 }
