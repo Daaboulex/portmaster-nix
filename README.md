@@ -72,7 +72,7 @@ services.portmaster = {
 
 - **System service**: `portmaster.service` — runs `portmaster-core` as root with proper capabilities and systemd hardening
 - **Desktop app**: `portmaster` binary with `.desktop` file — launch from your application menu
-- **System tray**: Optional XDG autostart entry (via `notifier.enable`) — checks that the service is running before launching
+- **System tray**: Optional XDG autostart entry (via `notifier.enable`) — starts in background/tray-only mode, checks that the service is running before launching
 - **Web UI**: Available at `http://127.0.0.1:817` when `devmode` is enabled
 - **Data directory**: `/var/lib/portmaster/` — managed via `systemd-tmpfiles`
 - **Kernel module**: `netfilter_queue` — loaded automatically for packet filtering
@@ -88,6 +88,22 @@ sudo systemctl status portmaster  # Check status
 ```
 
 The notifier tray icon (if enabled) will silently skip launching when the service isn't running — no "Connection refused" popup.
+
+## NixOS-specific patches
+
+The Tauri desktop app hardcodes FHS paths (`/usr/bin/systemctl`, `/usr/bin/pkexec`) that don't exist on NixOS. This package patches them at build time:
+
+| Upstream path | NixOS path | Purpose |
+|---|---|---|
+| `/sbin/systemctl` et al. | `${systemd}/bin/systemctl` | Service status detection |
+| `/usr/bin/pkexec` | `/run/wrappers/bin/pkexec` | Polkit privilege elevation (SUID wrapper) |
+| `/usr/bin/gksudo` | `/run/wrappers/bin/gksudo` | Fallback privilege elevation |
+
+Without these patches, the desktop app cannot detect whether `portmaster.service` is running, and the "Start Service" button in the splash screen doesn't work.
+
+## Architecture support
+
+Currently only `x86_64-linux`. The upstream Go and Rust code is architecture-independent, but `aarch64-linux` has not been tested.
 
 ## Migration from v1
 

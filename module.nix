@@ -252,7 +252,7 @@ in
         [Desktop Entry]
         Name=Portmaster Notifier
         Comment=Portmaster system tray notifier
-        Exec=/bin/sh -c 'sleep ${toString cfg.notifier.delay}; systemctl is-active --quiet portmaster.service && exec ${cfg.package}/bin/portmaster --data /var/lib/portmaster'
+        Exec=/bin/sh -c 'sleep ${toString cfg.notifier.delay}; systemctl is-active --quiet portmaster.service && exec ${cfg.package}/bin/portmaster --background --data /var/lib/portmaster'
         Type=Application
         X-KDE-autostart-phase=2
         X-KDE-StartupNotify=false

@@ -51,6 +51,7 @@
   makeDesktopItem,
   copyDesktopItems,
   autoPatchelfHook,
+  systemd,
 }:
 
 let
@@ -123,6 +124,17 @@ let
       ln -s ${portmasterUI}/* angular/dist/tauri-builtin/
       substituteInPlace tauri.conf.json5 \
         --replace-fail '"../../angular/dist/tauri-builtin"' '"../angular/dist/tauri-builtin"'
+
+      # Fix hardcoded FHS paths for NixOS:
+      # Upstream checks /sbin/systemctl etc. — none exist on NixOS.
+      # Replace each path individually to avoid multiline quoting issues.
+      substituteInPlace src/service/systemd.rs \
+        --replace-fail '"/sbin/systemctl",'    '"${systemd}/bin/systemctl",' \
+        --replace-fail '"/bin/systemctl",'     '' \
+        --replace-fail '"/usr/sbin/systemctl",' '' \
+        --replace-fail '"/usr/bin/systemctl",' '' \
+        --replace-fail '"/usr/bin/pkexec"'     '"/run/wrappers/bin/pkexec"' \
+        --replace-fail '"/usr/bin/gksudo"'     '"/run/wrappers/bin/gksudo"'
     '';
 
     env = {
@@ -253,7 +265,7 @@ buildGoModule {
       --prefix PATH : ${lib.makeBinPath [ iptables iproute2 ]}
 
     wrapProgram "$out/lib/portmaster/portmaster" \
-      --prefix PATH : ${lib.makeBinPath [ iptables iproute2 ]} \
+      --prefix PATH : ${lib.makeBinPath [ iptables iproute2 systemd ]} \
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libayatana-appindicator ]} \
       --prefix GIO_EXTRA_MODULES : "${glib-networking}/lib/gio/modules" \
       --prefix XDG_DATA_DIRS : "${gsettings-desktop-schemas}/share/gsettings-schemas/${gsettings-desktop-schemas.name}" \
