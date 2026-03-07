@@ -129,12 +129,12 @@ let
       # Upstream checks /sbin/systemctl etc. — none exist on NixOS.
       # Replace each path individually to avoid multiline quoting issues.
       substituteInPlace src/service/systemd.rs \
-        --replace-fail '"/sbin/systemctl",'    '"${systemd}/bin/systemctl",' \
-        --replace-fail '"/bin/systemctl",'     '' \
-        --replace-fail '"/usr/sbin/systemctl",' '' \
-        --replace-fail '"/usr/bin/systemctl",' '' \
-        --replace-fail '"/usr/bin/pkexec"'     '"/run/wrappers/bin/pkexec"' \
-        --replace-fail '"/usr/bin/gksudo"'     '"/run/wrappers/bin/gksudo"'
+        --replace-fail '"/sbin/systemctl",'     '"${systemd}/bin/systemctl",' \
+        --replace-fail '"/bin/systemctl",'      '/* removed */' \
+        --replace-fail '"/usr/sbin/systemctl",' '/* removed */' \
+        --replace-fail '"/usr/bin/systemctl",'  '/* removed */' \
+        --replace-fail '"/usr/bin/pkexec"'      '"/run/wrappers/bin/pkexec"' \
+        --replace-fail '"/usr/bin/gksudo"'      '"/run/wrappers/bin/gksudo"'
     '';
 
     env = {
