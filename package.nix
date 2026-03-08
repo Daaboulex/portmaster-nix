@@ -64,7 +64,7 @@ let
     hash = "sha256-DUDfeSdIH3e5yx1KKW6h6+HKKQ3WNllsdairjAkTdJs=";
   };
 
-  # Angular web UI — served by the Tauri desktop app and portmaster-core's web server
+  # Angular web UI — main dashboard (served by portmaster-core) and splash screen (embedded in Tauri)
   portmasterUI = buildNpmPackage {
     pname = "portmaster-ui";
     inherit version src;
@@ -74,14 +74,21 @@ let
 
     buildPhase = ''
       runHook preBuild
+      # Main web UI (portmaster-core's built-in web server + Tauri main window)
       npm run build
+      # Move web UI output before building tauri-builtin (both write into dist/)
+      mv dist web-dist
+      # Tauri splash screen — small standalone app with service status detection
+      # and "Start Now" button (shown when portmaster-core isn't running)
+      npm run build-tauri
       runHook postBuild
     '';
 
     installPhase = ''
       runHook preInstall
-      mkdir -p $out
-      cp -r dist/* $out/
+      mkdir -p $out/web $out/splash
+      cp -r web-dist/* $out/web/
+      cp -r dist/tauri-builtin/* $out/splash/
       runHook postInstall
     '';
 
@@ -121,7 +128,7 @@ let
 
     preBuild = ''
       mkdir -p angular/dist/tauri-builtin
-      ln -s ${portmasterUI}/* angular/dist/tauri-builtin/
+      ln -s ${portmasterUI}/splash/* angular/dist/tauri-builtin/
       substituteInPlace tauri.conf.json5 \
         --replace-fail '"../../angular/dist/tauri-builtin"' '"../angular/dist/tauri-builtin"'
 
@@ -236,10 +243,10 @@ buildGoModule {
 
     # Web UI assets
     mkdir -p $out/lib/portmaster/ui/modules/portmaster
-    cp -r ${portmasterUI}/* $out/lib/portmaster/ui/modules/portmaster/
+    cp -r ${portmasterUI}/web/* $out/lib/portmaster/ui/modules/portmaster/
 
     # Zipped UI for portmaster-core's built-in web server
-    pushd ${portmasterUI}
+    pushd ${portmasterUI}/web
     zip -r $out/lib/portmaster/portmaster.zip .
     popd
 
