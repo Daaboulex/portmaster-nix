@@ -130,6 +130,13 @@ in
       "/var/lib/portmaster/runtime/assets.zip"."L+" = {
         argument = "${cfg.package}/lib/portmaster/assets.zip";
       };
+      # Modular UI assets — Portmaster core looks for /ui/modules/portmaster/...
+      "/var/lib/portmaster/ui"."L+" = {
+        argument = "${cfg.package}/lib/portmaster/ui";
+      };
+      "/var/lib/portmaster/runtime/ui"."L+" = {
+        argument = "${cfg.package}/lib/portmaster/ui";
+      };
       # Portmaster hardcodes /usr/lib/portmaster/ for portmaster.zip lookup
       "/usr/lib/portmaster".d = {
         mode = "0755";

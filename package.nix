@@ -245,9 +245,11 @@ buildGoModule {
     mkdir -p $out/lib/portmaster/ui/modules/portmaster
     cp -r ${portmasterUI}/web/* $out/lib/portmaster/ui/modules/portmaster/
 
-    # Zipped UI for portmaster-core's built-in web server
-    pushd ${portmasterUI}/web
-    zip -r $out/lib/portmaster/portmaster.zip .
+    # Zipped UI for portmaster-core's built-in web server.
+    # We zip the entire ui/ directory structure so portmaster-core can resolve
+    # paths like /ui/modules/portmaster/index.html internally.
+    pushd $out/lib/portmaster
+    zip -r portmaster.zip ui/
     popd
 
     # Zipped assets — zip from assets/data/ to match upstream structure
