@@ -1,0 +1,113 @@
+diff --git a/service/process/tags/nix_linux.go b/service/process/tags/nix_linux.go
+new file mode 100644
+index 0000000..39bb635
+--- /dev/null
++++ b/service/process/tags/nix_linux.go
+@@ -0,0 +1,107 @@
++package tags
++
++import (
++	"regexp"
++	"strings"
++
++	"github.com/safing/portmaster/service/process"
++	"github.com/safing/portmaster/service/profile"
++	"github.com/safing/portmaster/service/profile/binmeta"
++)
++
++func init() {
++	err := process.RegisterTagHandler(new(nixHandler))
++	if err != nil {
++		panic(err)
++	}
++}
++
++const (
++	nixHandlerName = "Nix"
++	nixPkgTagKey   = "nix-pkg"
++	nixStorePrefix = "/nix/store/"
++)
++
++// nixStoreRegex matches Nix store paths and extracts the derivation name and version.
++// Path format: /nix/store/<32-char-hash>-<name>[-<version>]/<rest>/<binary>
++// Capture group 1: derivation name (without version)
++// Capture group 2: binary name (last path component)
++var nixStoreRegex = regexp.MustCompile(`^/nix/store/[a-z0-9]{32}-(.+?)(?:-[0-9][0-9a-z._-]*)?/(?:.+/)*(.+)$`)
++
++// nixHandler handles processes running from the Nix store on NixOS.
++// On NixOS, every system rebuild generates new store hashes, changing all
++// binary paths. Without this handler, Portmaster treats each rebuild as a
++// new application, losing per-app firewall rules and settings.
++// This handler creates a stable tag from the derivation name and binary
++// name, so profiles persist across rebuilds.
++type nixHandler struct{}
++
++// Name returns the tag handler name.
++func (h *nixHandler) Name() string {
++	return nixHandlerName
++}
++
++// TagDescriptions returns a list of all possible tags and their description
++// of this handler.
++func (h *nixHandler) TagDescriptions() []process.TagDescription {
++	return []process.TagDescription{
++		{
++			ID:          nixPkgTagKey,
++			Name:        "Nix Package",
++			Description: "Stable identifier for a Nix store binary (derivation-name:binary-name).",
++		},
++	}
++}
++
++// parseNixStorePath extracts the derivation name and binary name from a Nix store path.
++func parseNixStorePath(path string) (derivName, binName string) {
++	matches := nixStoreRegex.FindStringSubmatch(path)
++	if len(matches) != 3 {
++		return "", ""
++	}
++	return matches[1], matches[2]
++}
++
++// AddTags adds tags to the given process.
++func (h *nixHandler) AddTags(p *process.Process) {
++	if !strings.HasPrefix(p.Path, nixStorePrefix) {
++		return
++	}
++
++	derivName, binName := parseNixStorePath(p.Path)
++	if derivName == "" || binName == "" {
++		return
++	}
++
++	// Set matching path for regular profile matching.
++	p.MatchingPath = p.Path
++
++	// Add nix package tag.
++	p.Tags = append(p.Tags, profile.Tag{
++		Key:   nixPkgTagKey,
++		Value: derivName + ":" + binName,
++	})
++}
++
++// CreateProfile creates a profile based on the tags of the process.
++// Returns nil to skip.
++func (h *nixHandler) CreateProfile(p *process.Process) *profile.Profile {
++	if tag, ok := p.GetTag(nixPkgTagKey); ok {
++		return profile.New(&profile.Profile{
++			Source:              profile.SourceLocal,
++			Name:                binmeta.GenerateBinaryNameFromPath(p.Path),
++			PresentationPath:    p.Path,
++			UsePresentationPath: true,
++			Fingerprints: []profile.Fingerprint{
++				{
++					Type:      profile.FingerprintTypeTagID,
++					Key:       tag.Key,
++					Operation: profile.FingerprintOperationEqualsID,
++					Value:     tag.Value,
++				},
++			},
++		})
++	}
++
++	return nil
++}

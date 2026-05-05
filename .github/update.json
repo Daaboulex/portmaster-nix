@@ -1,0 +1,20 @@
+{
+  "package": "portmaster",
+  "upstream": {
+    "type": "github-release",
+    "owner": "safing",
+    "repo": "portmaster"
+  },
+  "packageFile": "package.nix",
+  "hashes": [
+    "hash",
+    "vendorHash",
+    "npmDepsHash",
+    "cargoHash"
+  ],
+  "verify": {
+    "binary": null,
+    "args": null,
+    "check": "wrapper"
+  }
+}
