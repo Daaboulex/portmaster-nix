@@ -267,6 +267,14 @@ in
               --slurpfile force ${forceJSON} \
               '($seed[0] * .) * $force[0]' \
           > "$configFile.tmp"
+        # Validate merged JSON before replacing live config — an interrupted
+        # write (power fault, OOM) produces truncated JSON that would revert
+        # forceSettings to Portmaster defaults on next start.
+        if ! ${pkgs.jq}/bin/jq '.' "$configFile.tmp" > /dev/null 2>&1; then
+          echo "portmaster preStart: config.json.tmp is not valid JSON — refusing to replace" >&2
+          rm -f "$configFile.tmp"
+          exit 1
+        fi
         mv "$configFile.tmp" "$configFile"
         chmod 0600 "$configFile"
       '';
