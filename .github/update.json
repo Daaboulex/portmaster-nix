@@ -6,11 +6,12 @@
     "repo": "portmaster"
   },
   "packageFile": "package.nix",
+  "versionAttr": "portmasterVersion",
   "hashes": [
-    "hash",
-    "vendorHash",
-    "npmDepsHash",
-    "cargoHash"
+    { "field": "hash", "file": "package.nix" },
+    { "field": "vendorHash", "file": "package.nix" },
+    { "field": "npmDepsHash", "file": "package.nix" },
+    { "field": "cargoHash", "file": "package.nix" }
   ],
   "verify": {
     "binary": null,
