@@ -4,6 +4,7 @@
   buildNpmPackage,
   fetchFromGitHub,
   pkg-config,
+  python3,
   makeBinaryWrapper,
   nodejs,
   glib,
@@ -84,6 +85,10 @@ let
 
     sourceRoot = "${src.name}/desktop/angular";
     inherit npmDepsHash;
+
+    nativeBuildInputs = [
+      (python3.withPackages (ps: [ ps.setuptools ]))
+    ];
 
     buildPhase = ''
       runHook preBuild
@@ -317,7 +322,7 @@ buildGoModule {
     description = "Free and open-source application firewall";
     homepage = "https://safing.io/portmaster/";
     license = lib.licenses.gpl3Only;
-    platforms = [ "x86_64-linux" ];
+    platforms = [ "x86_64-linux" "aarch64-linux" ];
     mainProgram = "portmaster";
   };
 }

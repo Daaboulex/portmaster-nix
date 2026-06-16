@@ -108,5 +108,5 @@ switch to the in-tree `services.portmaster` module.
 
 ## Architecture support
 
-Currently `x86_64-linux` only. Upstream Go + Rust code is
-architecture-independent; `aarch64-linux` has not been tested.
+`x86_64-linux` and `aarch64-linux`. Upstream Go + Rust code is
+architecture-independent; both architectures are supported.
