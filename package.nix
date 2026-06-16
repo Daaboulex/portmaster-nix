@@ -314,8 +314,8 @@ buildGoModule {
       --prefix GIO_EXTRA_MODULES : "${glib-networking}/lib/gio/modules" \
       --prefix XDG_DATA_DIRS : "${gsettings-desktop-schemas}/share/gsettings-schemas/${gsettings-desktop-schemas.name}" \
       --set-default GDK_BACKEND "wayland,x11" \
-      --set WEBKIT_DISABLE_COMPOSITING_MODE "1" \
-      --set WEBKIT_DISABLE_DMABUF_RENDERER "1"
+      --set-default WEBKIT_DISABLE_COMPOSITING_MODE "0" \
+      --set-default WEBKIT_DISABLE_DMABUF_RENDERER "0"
   '';
 
   meta = {
