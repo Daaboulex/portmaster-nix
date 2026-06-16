@@ -160,7 +160,7 @@ Without these patches, the desktop app cannot detect whether `portmaster.service
 
 ## Architecture support
 
-Currently only `x86_64-linux`. The upstream Go and Rust code is architecture-independent, but `aarch64-linux` has not been tested.
+`x86_64-linux` and `aarch64-linux`. The upstream Go and Rust code is architecture-independent, and both architectures have been verified to build.
 
 ## Migration from v1
 

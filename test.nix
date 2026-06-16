@@ -1,5 +1,5 @@
 # NixOS VM test for the Portmaster module.
-# Run with: nix build .#checks.x86_64-linux.portmaster -L
+# Run with: nix build .#checks.x86_64-linux.portmaster -L  (or .#checks.aarch64-linux.portmaster)
 {
   self,
   pkgs,
