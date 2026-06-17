@@ -3,7 +3,7 @@
 <!-- BEGIN generated:badges -->
 [![CI](https://github.com/Daaboulex/portmaster-nix/actions/workflows/ci.yml/badge.svg)](https://github.com/Daaboulex/portmaster-nix/actions/workflows/ci.yml)
 [![NixOS unstable](https://img.shields.io/badge/NixOS-unstable-78C0E8?logo=nixos&logoColor=white)](https://nixos.org)
-[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 <!-- END generated:badges -->
 
 NixOS packaging for [Portmaster](https://safing.io/portmaster/) — the free and open-source application firewall by [Safing](https://safing.io).
@@ -203,7 +203,7 @@ See [docs/OPTIONS.md](docs/OPTIONS.md) for the full options reference.
 
 ## License
 
-This packaging flake is [GPL-3.0-only](./LICENSE) licensed (matches upstream). Upstream Portmaster is [GPL-3.0-only](https://github.com/safing/portmaster/blob/master/LICENSE) by Safing GmbH.
+The Nix packaging code is [MIT](./LICENSE) licensed. Upstream Portmaster is [AGPL-3.0](https://github.com/safing/portmaster/blob/master/LICENSE) by Safing GmbH.
 
 <!-- BEGIN generated:footer -->
 ---

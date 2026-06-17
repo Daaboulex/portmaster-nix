@@ -8,14 +8,39 @@
   "packageFile": "package.nix",
   "versionAttr": "portmasterVersion",
   "hashes": [
-    { "field": "hash", "file": "package.nix" },
-    { "field": "vendorHash", "file": "package.nix" },
-    { "field": "npmDepsHash", "file": "package.nix" },
-    { "field": "cargoHash", "file": "package.nix" }
+    {
+      "field": "hash",
+      "file": "package.nix"
+    },
+    {
+      "field": "vendorHash",
+      "file": "package.nix"
+    },
+    {
+      "field": "npmDepsHash",
+      "file": "package.nix"
+    },
+    {
+      "field": "cargoHash",
+      "file": "package.nix"
+    }
   ],
   "verify": {
     "binary": null,
     "args": null,
     "check": "wrapper"
-  }
+  },
+  "description": "Portmaster packaged for NixOS - builds Safing's application firewall from source with a hardened systemd module",
+  "topics": [
+    "nix",
+    "nixos",
+    "flake",
+    "nixos-module",
+    "portmaster",
+    "safing",
+    "firewall",
+    "application-firewall",
+    "dns",
+    "network-security"
+  ]
 }

@@ -321,8 +321,11 @@ buildGoModule {
   meta = {
     description = "Free and open-source application firewall";
     homepage = "https://safing.io/portmaster/";
-    license = lib.licenses.gpl3Only;
-    platforms = [ "x86_64-linux" "aarch64-linux" ];
+    license = lib.licenses.agpl3Only;
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     mainProgram = "portmaster";
   };
 }
