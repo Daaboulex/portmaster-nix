@@ -18,6 +18,7 @@ This flake builds Portmaster **v2.1.7 from source** (Go core + Rust/Tauri deskto
 | **Project** | [safing/portmaster](https://github.com/safing/portmaster) |
 | **License** | AGPL-3.0 |
 | **Tracked** | GitHub releases |
+
 <!-- END generated:upstream -->
 
 ## Documentation
@@ -62,6 +63,7 @@ Import the NixOS module:
 ```nix
 imports = [ inputs.portmaster.nixosModules.default ];
 ```
+
 <!-- END generated:installation -->
 
 ## Usage

@@ -7,7 +7,7 @@ upstream.
 
 ## Directory layout
 
-```
+```text
 portmaster-nix/
 ├── flake.nix                    # packages, overlay, nixosModules.default
 ├── package.nix                  # builds portmaster-core, portmaster-ui,

@@ -50,7 +50,7 @@ repo — fix and re-commit.
 require kernel netfilter access and root, so the verification chain
 stops at:
 
-```
+```text
 eval check   →   build all 3 packages   →   wrapper script + .desktop + tray polkit references
                   →   ldd check on portmaster-core
 ```
